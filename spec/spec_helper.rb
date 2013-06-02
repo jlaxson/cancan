@@ -3,6 +3,8 @@ require 'bundler/setup'
 
 Bundler.require(:default)
 
+module ActiveModel; module Observing; end; end
+
 require 'supermodel' # shouldn't Bundler do this already?
 require 'active_support/all'
 require 'matchers'

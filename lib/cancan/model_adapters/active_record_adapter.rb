@@ -6,17 +6,22 @@ module CanCan
       end
 
       def self.override_condition_matching?(subject, name, value)
-        name.kind_of?(MetaWhere::Column) if defined? MetaWhere
+        return true if defined?(MetaWhere) and name.kind_of?(MetaWhere::Column) 
+        subject.kind_of? ActiveRecord::Associations::CollectionProxy
       end
 
       def self.matches_condition?(subject, name, value)
-        subject_value = subject.send(name.column)
-        if name.method.to_s.ends_with? "_any"
-          value.any? { |v| meta_where_match? subject_value, name.method.to_s.sub("_any", ""), v }
-        elsif name.method.to_s.ends_with? "_all"
-          value.all? { |v| meta_where_match? subject_value, name.method.to_s.sub("_all", ""), v }
+        if subject.kind_of? ActiveRecord::Associations::CollectionProxy
+          subject.where(name => value)
         else
-          meta_where_match? subject_value, name.method, value
+          subject_value = subject.send(name.column)
+          if name.method.to_s.ends_with? "_any"
+            value.any? { |v| meta_where_match? subject_value, name.method.to_s.sub("_any", ""), v }
+          elsif name.method.to_s.ends_with? "_all"
+            value.all? { |v| meta_where_match? subject_value, name.method.to_s.sub("_all", ""), v }
+          else
+            meta_where_match? subject_value, name.method, value
+          end
         end
       end
 
